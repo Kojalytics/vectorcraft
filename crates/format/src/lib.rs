@@ -3,7 +3,7 @@
 //! A `.vectorcraft` file is UTF-8 JSON, gzip-compressed when saved with Use Compression (told apart
 //! by its magic bytes on open, whatever the version):
 //! ```json
-//! { "format": "vectorcraft", "version": 3, "generator": "VectorCraft 0.1.0",
+//! { "format": "vectorcraft", "version": 3, "generator": "VectorKoja 0.1.0",
 //!   "preview": { "mime": "image/png", "data": "<base64>" },
 //!   "profiles": { "<profile name>": { "mime": "application/vnd.iccprofile", "data": "<base64>" } },
 //!   "pdf": { "mime": "application/pdf", "data": "<base64>" },
@@ -88,17 +88,17 @@ pub fn is_native_name(name: &str) -> bool {
 
 #[derive(Debug, thiserror::Error)]
 pub enum FormatError {
-    #[error("not a VectorCraft file: {0}")]
+    #[error("not a VectorKoja file: {0}")]
     NotVectorcraft(String),
-    #[error("file version {0} is newer than this VectorCraft supports ({VERSION})")]
+    #[error("file version {0} is newer than this VectorKoja supports ({VERSION})")]
     TooNew(u32),
     #[error("invalid image data for `{0}`")]
     BadImage(String),
-    #[error("can't save version {0}: VectorCraft writes versions {MIN_VERSION} to {VERSION}")]
+    #[error("can't save version {0}: VectorKoja writes versions {MIN_VERSION} to {VERSION}")]
     BadVersion(u32),
     #[error("version {0} files can't be compressed: only version {COMPRESSED_SINCE} and later open compressed files")]
     CompressedTooOld(u32),
-    #[error("the compressed file unpacks to more than VectorCraft reads ({} MB of document, {} MB per image)", MAX_JSON >> 20, MAX_BLOB >> 20)]
+    #[error("the compressed file unpacks to more than VectorKoja reads ({} MB of document, {} MB per image)", MAX_JSON >> 20, MAX_BLOB >> 20)]
     TooBig,
     #[error("the document is too large to save compressed ({0}): save it with Use Compression off")]
     TooBigToCompress(String),
@@ -349,7 +349,7 @@ pub fn save_to(doc: &Document, o: &SaveOptions, w: impl Write) -> Result<(), For
     // Older apps only know the name from before the rename.
     env.field(&mut out, "format", &if o.version < 3 { LEGACY_EXTENSION } else { EXTENSION })?;
     env.field(&mut out, "version", &o.version)?;
-    env.field(&mut out, "generator", &format!("VectorCraft {}", env!("CARGO_PKG_VERSION")))?;
+    env.field(&mut out, "generator", &format!("VectorKoja {}", env!("CARGO_PKG_VERSION")))?;
     if let Some(png) = &o.preview {
         env.field(&mut out, "preview", &blob("image/png", png))?;
     }

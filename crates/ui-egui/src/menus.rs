@@ -177,7 +177,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "shortcuts.preset",
         "Keyboard Shortcut Set",
         "",
-        "{name: \"VectorCraft Defaults\" | \"Classic Defaults\"} (names of earlier versions are accepted)",
+        "{name: \"VectorKoja Defaults\" | \"Classic Defaults\"} (names of earlier versions are accepted)",
     ),
     ("shortcuts.export", "Export Keyboard Shortcuts…", "", "{path?}"),
     ("shortcuts.import", "Import Keyboard Shortcuts…", "", "{path? | data?}"),
@@ -416,9 +416,9 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "",
         "{} opens the Save PDF dialog; with params = document.exportPdf options written to path (asked when missing; viewAfterSaving opens the file) → {path, bytes, warnings}",
     ),
-    ("help.about", "About VectorCraft", "", "{}"),
+    ("help.about", "About VectorKoja", "", "{}"),
     ("help.commandPalette", "Search Commands…", "Cmd+Shift+/", "{}"),
-    ("app.quit", "Quit VectorCraft", "Cmd+Q", "{}"),
+    ("app.quit", "Quit VectorKoja", "Cmd+Q", "{}"),
     (
         "ui.swatchOptions",
         "Swatch Options…",
@@ -724,7 +724,7 @@ pub const UI_COMMANDS: &[(&str, &str, &str, &str)] = &[
         "ui.pdfPresetDialog",
         "PDF Preset",
         "",
-        "{name?: a saved preset to edit | preset?: the preset a new one starts from (default VectorCraft Default)} open the preset editor (dialog `pdfPreset`: the Save PDF dialog's option fields plus `name` and `description`); OK runs pdf.preset.save and returns to PDF Presets",
+        "{name?: a saved preset to edit | preset?: the preset a new one starts from (default VectorKoja Default)} open the preset editor (dialog `pdfPreset`: the Save PDF dialog's option fields plus `name` and `description`); OK runs pdf.preset.save and returns to PDF Presets",
     ),
     ("file.openRecent11", "Open Recent File 11", "", "{}"),
     ("file.openRecent12", "Open Recent File 12", "", "{}"),
@@ -2337,13 +2337,13 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
     let panel = |label: &'static str, id: &'static str| cp(label, "window.panel", json!({ "panel": id, "toggle": true }));
     vec![
         (
-            // The application menu: About and Discord only. The in-window bar never shows it (File
+            // The application menu: About only. The in-window bar never shows it (File
             // is first there, as in Illustrator); on macOS `native_menu::mac_layout` composes the
             // App menu from this entry and the other menus (About from Help, Settings from Edit,
             // Quit from File, Language and Appearance synthesized). It stays first: `from_tree`
             // gives the first menu the App role.
-            "VectorCraft",
-            vec![c("About VectorCraft", "help.about"), c("Join Our Discord", "help.discord")],
+            "VectorKoja",
+            vec![c("About VectorKoja", "help.about")],
         ),
         (
             "File",
@@ -2980,15 +2980,13 @@ pub fn menu_tree_named(english_names: bool) -> Vec<(&'static str, Vec<Item>)> {
         (
             "Help",
             vec![
-                c("Join Our Discord", "help.discord"),
-                c("ArtCraft Website", "help.website"),
-                c("VectorCraft on getartcraft.com", "help.appPage"),
-                c("VectorCraft on GitHub", "help.github"),
+                c("Kojalytics Website", "help.website"),
+                c("VectorKoja on kojalytics.com", "help.appPage"),
                 Sep,
                 c("Search Commands…", "help.commandPalette"),
-                todos("VectorCraft Help…", "F1"),
+                todos("VectorKoja Help…", "F1"),
                 Sep,
-                c("About VectorCraft", "help.about"),
+                c("About VectorKoja", "help.about"),
             ],
         ),
     ]
@@ -3184,7 +3182,7 @@ pub fn menu_bar(app: &mut VectorcraftApp, ui: &mut egui::Ui) -> f32 {
     let tree = menu_tree_named(app.session.prefs.font_names_in_english);
     // No application menu in the window (as in Illustrator): the bar starts at File on every
     // platform. The VectorCraft menu stays in the tree: the native Mac bar takes it from there.
-    let tree: Vec<(&str, Vec<Item>)> = tree.into_iter().filter(|(title, _)| *title != "VectorCraft").collect();
+    let tree: Vec<(&str, Vec<Item>)> = tree.into_iter().filter(|(title, _)| *title != "VectorKoja").collect();
     let (end, open) = egui::MenuBar::new()
         .ui(ui, |ui| {
             let mut titles = Vec::with_capacity(tree.len());
@@ -3578,7 +3576,7 @@ pub fn invoke(app: &mut VectorcraftApp, id: &str, p: Value) {
         return;
     }
     // Help links: the command returns the URL; a menu click opens it (agents just get the URL).
-    if matches!(id, "help.discord" | "help.website" | "help.appPage" | "help.github") {
+    if matches!(id, "help.website" | "help.appPage") {
         app.open_link(id);
         return;
     }
@@ -4099,7 +4097,7 @@ mod tests {
         for t in titles {
             assert!(shown.iter().any(|s| s == t), "{t} missing from {shown:?}");
         }
-        assert!(!shown.iter().any(|s| s == "VectorCraft"), "{shown:?}");
+        assert!(!shown.iter().any(|s| s == "VectorKoja"), "{shown:?}");
     }
 
     #[test]

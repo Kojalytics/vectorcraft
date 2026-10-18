@@ -53,6 +53,8 @@ mod window;
 mod window_frame;
 mod xwayland;
 
+mod license;
+
 use vectorcraft_engine::Session;
 use vectorcraft_engine::cmd::fileio;
 use vectorcraft_engine::file_access::{self, AutomationRoots};
@@ -93,6 +95,11 @@ impl eframe::App for App {
     }
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     fn ui(&mut self, ui: &mut egui::Ui, frame: &mut eframe::Frame) {
+        // Without an activated Kojalytics license the window shows the lock screen instead.
+        #[cfg(not(target_arch = "wasm32"))]
+        if !crate::license::gate(ui) {
+            return;
+        }
         #[cfg(target_os = "macos")]
         {
             let bar = vectorcraft_ui_egui::chrome::APP_BAR_HEIGHT;
@@ -129,9 +136,9 @@ impl App {
             // eframe can't give a window a new device: the user saves and starts again.
             self.graphics_lost = self.app.graphics_lost(&why);
             self.app.status(if self.graphics_lost {
-                "The graphics device was lost: unsaved changes are kept for Data Recovery. Save your documents and restart VectorCraft"
+                "The graphics device was lost: unsaved changes are kept for Data Recovery. Save your documents and restart VectorKoja"
             } else {
-                "The graphics device was lost: save your documents and restart VectorCraft"
+                "The graphics device was lost: save your documents and restart VectorKoja"
             });
         }
         if self.graphics_lost && ctx.input(|i| i.viewport().close_requested()) {
@@ -198,7 +205,7 @@ fn discard_marked_text() {
 /// Where UI preferences live: ~/Library/Application Support/VectorCraft (macOS),
 /// %APPDATA%\VectorCraft (Windows), $XDG_CONFIG_HOME or ~/.config/vectorcraft (Linux).
 fn prefs_path() -> Option<std::path::PathBuf> {
-    prefs_dir::prefs_path_for("VectorCraft", "vectorcraft")
+    prefs_dir::prefs_path_for("VectorKoja", "vectorcraft")
 }
 
 /// The same place under the project's former name (DrawCraft): read once if there are no
@@ -556,7 +563,7 @@ fn services(parent: Parent, ui: egui::Context) -> Services {
         // owner that never answers holds a read for up to 4 s. Windows only asks which formats the
         // clipboard holds and macOS asks the pasteboard server, so they check in line.
         clipboard_probe: cfg!(target_os = "linux").then(|| Box::new(clipboard::system_clipboard) as ClipboardProbeFactory),
-        // Help → Discord / website / GitHub, the Discord button, About and Home links.
+        // Help → website links, About and Home links.
         open_url: Some(Box::new(|url: &str| {
             let _ = webbrowser::open(url);
         })),
@@ -605,7 +612,7 @@ fn app_icon() -> egui::IconData {
     #[cfg(target_os = "macos")]
     let png: &[u8] = include_bytes!("../../../assets/app-icon/vectorcraft-macos-512.png");
     #[cfg(not(target_os = "macos"))]
-    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/ai.storyteller.vectorcraft.png");
+    let png: &[u8] = include_bytes!("../../../assets/app-icon/hicolor/256x256/apps/com.kojalytics.vectorcraft.png");
     eframe::icon_data::from_png_bytes(png).unwrap_or_default()
 }
 
@@ -641,7 +648,7 @@ fn custom_titlebar(saved: Option<&vectorcraft_ui_egui::UiState>) -> bool {
 fn native_options(custom_titlebar: bool) -> eframe::NativeOptions {
     eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_title("VectorCraft")
+            .with_title("VectorKoja")
             .with_inner_size(window::DEFAULT_SIZE)
             .with_min_inner_size(window::MIN_SIZE)
             .with_drag_and_drop(true)
@@ -650,7 +657,7 @@ fn native_options(custom_titlebar: bool) -> eframe::NativeOptions {
             .with_titlebar_shown(false)
             .with_title_shown(false)
             .with_icon(app_icon())
-            .with_app_id("ai.storyteller.vectorcraft"),
+            .with_app_id("com.kojalytics.vectorcraft"),
         #[cfg(feature = "windows7")]
         renderer: eframe::Renderer::Glow,
         ..Default::default()
@@ -745,7 +752,7 @@ fn main() -> std::process::ExitCode {
     if let Some(logger) = logger {
         match log_dir().filter(|_| prefs_enabled()) {
             Some(dir) => match logger.attach_dir(&dir) {
-                Ok(path) => log::info!("VectorCraft {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
+                Ok(path) => log::info!("VectorKoja {}, log file {}", env!("CARGO_PKG_VERSION"), path.display()),
                 // Standard error only by now (`attach_dir` gave up on the file); unlike `eprintln!`, never panics.
                 Err(e) => log::warn!("no log file: {e}"),
             },
@@ -878,7 +885,7 @@ fn main() -> std::process::ExitCode {
     // A panic that ends the window (egui-wgpu's own, #502) is caught here: never a crash.
     let outcome = vectorcraft_engine::guard::catch_panic(|| {
         eframe::run_native(
-            "VectorCraft",
+            "VectorKoja",
             options,
             Box::new(move |cc| {
                 let mut session = Session::new();
@@ -929,15 +936,15 @@ fn main() -> std::process::ExitCode {
                             ""
                         };
                         app.status(format!(
-                            "The graphics processor tried first couldn't show the window, so VectorCraft started again on {summary}{hint}"
+                            "The graphics processor tried first couldn't show the window, so VectorKoja started again on {summary}{hint}"
                         ));
                     } else if let Some(crash) = &crash {
                         app.status(match crash {
                             gpu::Crash::Adapter { name, .. } => format!(
-                                "The last start of VectorCraft ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set"
+                                "The last start of VectorKoja ended on {name} before its window appeared, so it started on {summary}. To try that graphics processor again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set"
                             ),
                             gpu::Crash::Listing => format!(
-                                "The last start of VectorCraft ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set"
+                                "The last start of VectorKoja ended while it listed the graphics processors, so it started on {summary} with OpenGL alone. To try the other graphics backends again, change Preferences › Performance › Graphics Processor or start with WGPU_BACKEND set"
                             ),
                         });
                     }
@@ -987,7 +994,7 @@ fn main() -> std::process::ExitCode {
     match outcome {
         Ok(()) => std::process::ExitCode::SUCCESS,
         Err(e) => {
-            log::error!("VectorCraft stopped: {e}");
+            log::error!("VectorKoja stopped: {e}");
             std::process::ExitCode::FAILURE
         }
     }
@@ -1088,6 +1095,6 @@ mod tests {
         assert!(!plist.contains("<key>NSDocumentClass</key>"), "not an NSDocument app: AppKit would refuse the files");
         let types = plist.matches("<key>CFBundleTypeName</key>").count();
         assert!(types > 1 && plist.matches("<key>LSHandlerRank</key>").count() == types, "every document type has a rank");
-        assert_eq!(plist.matches("<string>Owner</string>").count(), 2, "only VectorCraft documents and templates are owned");
+        assert_eq!(plist.matches("<string>Owner</string>").count(), 2, "only VectorKoja documents and templates are owned");
     }
 }

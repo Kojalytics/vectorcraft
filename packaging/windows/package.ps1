@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Build, sign and package VectorCraft for Windows.
+  Build, sign and package VectorKoja for Windows.
 
 .DESCRIPTION
   Produces, in $env:DIST (default: dist/release):
@@ -54,7 +54,7 @@ New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 if (-not $env:VECTORCRAFT_BUILD_SHA) { $env:VECTORCRAFT_BUILD_SHA = (git -C $Root rev-parse HEAD 2>$null) }
 if (-not $env:VECTORCRAFT_BUILD_DATE) { $env:VECTORCRAFT_BUILD_DATE = (Get-Date).ToUniversalTime().ToString('yyyy-MM-dd') }
 
-Write-Output "VectorCraft $Version for Windows $Arch ($Target)"
+Write-Output "VectorKoja $Version for Windows $Arch ($Target)"
 
 if (-not $SkipBuild) {
   # Static CRT: no VC++ redistributable needed. Scoped to the target so host build scripts and
@@ -109,7 +109,7 @@ if (Test-Path (Join-Path $Root 'licenses')) {
 }
 
 # ---- MSI ---------------------------------------------------------------------------------------
-# The setup wizard's art, drawn here from the app icon so the MSI shows VectorCraft rather than
+# The setup wizard's art, drawn here from the app icon so the MSI shows VectorKoja rather than
 # WiX's stock bitmaps: a 493x58 banner across the top of the inner pages (the page title is drawn
 # over its left side, so that stays white) and a 493x312 backdrop for the Welcome and Finish pages
 # (their text sits on the right; the left 164 px are ours). Both must be 24-bit BMPs.
@@ -144,7 +144,7 @@ function New-InstallerArt([string] $IconPng, [string] $BannerOut, [string] $Dial
 }
 $Banner = Join-Path $Stage 'installer-banner.bmp'
 $Dialog = Join-Path $Stage 'installer-dialog.bmp'
-New-InstallerArt (Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\ai.storyteller.vectorcraft.png') $Banner $Dialog
+New-InstallerArt (Join-Path $Root 'assets\app-icon\hicolor\256x256\apps\com.kojalytics.vectorcraft.png') $Banner $Dialog
 
 $Msi = Join-Path $Dist "vectorcraft-$Version-windows-$Arch.msi"
 Invoke-Native 'wix build' {
