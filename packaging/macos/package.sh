@@ -12,6 +12,9 @@
 #   MACOS_KEYCHAIN        keychain holding the identity (optional)
 # Notarization (env; all three needed, and a real identity):
 #   APPLE_ID, APPLE_PASSWORD (app-specific password), APPLE_TEAM_ID
+
+# Retries a command (Apple's stapler drops connections now and then).
+koja_retry() { local i; for i in 1 2 3 4 5 6; do "$@" && return 0; echo "retry $i/6: $*" >&2; sleep $((i * 20)); done; return 1; }
 set -euo pipefail
 # shellcheck source=../env.sh
 . "$(dirname "${BASH_SOURCE[0]}")/../env.sh"
@@ -115,7 +118,7 @@ notarize() {
 validate_stapled() {
   local try
   for try in 1 2 3 4; do
-    xcrun stapler validate "$1" && return 0
+    koja_retry xcrun stapler validate "$1" && return 0
     [ "$try" = 4 ] && break
     echo "stapler validate failed (try $try of 4); retrying in $((try * 20)) s" >&2
     sleep $((try * 20))
@@ -147,7 +150,7 @@ codesign --verify --strict --deep --verbose=2 "$APP"
 if [ "$NOTARIZE" = 1 ]; then
   ditto -c -k --keepParent "$APP" "$WORK/VectorKoja-notarize.zip"
   notarize "$WORK/VectorKoja-notarize.zip"
-  xcrun stapler staple "$APP"
+  koja_retry xcrun stapler staple "$APP"
   validate_stapled "$APP"
   spctl --assess --type execute -vvv "$APP"
 fi
@@ -197,7 +200,7 @@ fi
 hdiutil_retry detach detach "$MOUNT" >/dev/null
 if [ "$NOTARIZE" = 1 ]; then
   notarize "$DMG"
-  xcrun stapler staple "$DMG"
+  koja_retry xcrun stapler staple "$DMG"
   validate_stapled "$DMG"
   spctl --assess --type open --context context:primary-signature -vvv "$DMG"
 fi
