@@ -189,7 +189,7 @@ hdiutil_retry create create -srcfolder "$STAGE" -volname "VectorKoja" -fs HFS+ -
 sign "$DMG"
 codesign --verify --strict --verbose=2 "$DMG"
 # The app inside the image must still pass --strict, so a makehybrid-style regression can't ship.
-MOUNT="$WORK/dmg-check"
+MOUNT="$(mktemp -d)/dmg-check"   # internal disk: no mount points on external drives
 rm -rf "$MOUNT"
 mkdir -p "$MOUNT"
 hdiutil_retry attach attach -nobrowse -readonly -mountpoint "$MOUNT" "$DMG" >/dev/null
