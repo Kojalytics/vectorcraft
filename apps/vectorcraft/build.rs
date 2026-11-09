@@ -15,7 +15,7 @@ fn main() -> Result<(), String> {
     res.set_icon("../../assets/app-icon/vectorcraft.ico")
         .set("ProductName", "VectorKoja")
         .set("FileDescription", "VectorKoja vector illustration editor")
-        .set("CompanyName", "Learning Machines LLC")
+        .set("CompanyName", "Kojalytics")
         .set("LegalCopyright", "Copyright (c) the VectorKoja authors. MIT OR Apache-2.0.")
         .set("OriginalFilename", "vectorcraft.exe")
         .set("InternalName", "vectorcraft");
